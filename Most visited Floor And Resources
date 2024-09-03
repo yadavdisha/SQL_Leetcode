@@ -1,0 +1,54 @@
+SQL Query Challenge:
+Given a table entries with columns: name, address, email, floor, and resources, write a query to:
+
+Find the most visited floor for each person.
+Calculate the total number of visits per person.
+List unique resources used by each person in a comma-separated format.
+
+
+
+
+
+
+
+-----------------------Solution-----------------
+create table entries ( 
+name varchar(20),
+address varchar(20),
+email varchar(20),
+floor int,
+resources varchar(10));
+
+insert into entries 
+values ('A','Bangalore','A@gmail.com',1,'CPU'),
+('A','Bangalore','A1@gmail.com',1,'CPU'),
+('A','Bangalore','A2@gmail.com',2,'DESKTOP')
+,('B','Bangalore','B@gmail.com',2,'DESKTOP'),
+('B','Bangalore','B1@gmail.com',2,'DESKTOP'),
+('B','Bangalore','B2@gmail.com',1,'MONITOR')
+
+select * from entries;
+
+
+with  distinct_resources as(
+select distinct name ,resources from entries)
+,aggregate_resources as (
+select name,STRING_AGG(resources,',') as used_resources
+from  distinct_resources
+group by name)
+
+,total_visit as (
+select name,count(*) as total_visit,STRING_AGG(resources,',') as resources_used 
+from entries
+group by name),
+
+visit as(
+select name,floor,count(*) as no_of_visit,rank() over(partition by name order by count(*)  desc) as rn
+
+from entries
+group by name,floor)
+select v.name,v.floor as most_visited_floor,tv.total_visit ,ar.used_resources
+from visit v inner join total_visit tv on v.name=tv.name
+inner join aggregate_resources ar on v.name=ar.name
+where rn=1
+
